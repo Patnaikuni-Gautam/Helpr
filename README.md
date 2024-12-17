@@ -1,6 +1,2 @@
 # Helpr
-According to the current affairs, the offense rates against women have been on a rise over the past years. And the need for safety measures against these offenses is of much concern, and taking action against these is of much greater.
-
-npx react-native init MyNewProject
-
-
+In recent years, the offense rates against women have been steadily rising, making safety measures critical. Mobile phones, being a universal necessity, can be leveraged as safety devices when used effectively. While several safety apps for women exist, many have proven unreliable due to significant drawbacks. Our project aims to tackle these issues by providing a platform that enhances security and support. Helpr captures and sends geographic locations and photo/video evidence to authorities and volunteers in real time. The app alerts users about unsafe zones and triggers an SOS alert through the power button when a victim cannot call for help. Volunteers are authenticated via official emails, ensuring a trustworthy support system. This platform not only reduces offense rates but also prevents crimes by informing users about potential dangers in real-time.
