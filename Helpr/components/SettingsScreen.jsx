@@ -49,15 +49,18 @@ export default function SettingsScreen() {
         </View>
       </TouchableOpacity>
 
+      {/* TODO */}
+      {/* "Payments And Subscription",
+      "Parental Controls", */}
+
       {/* Settings Options */}
       <View style={styles.optionsContainer}>
         {[
           "Personal Details",
           "Volunteer Details",
           "Emergency Contact Details",
-          "Payments and Subscription",
           "Parental Controls",
-          "Privacy and Policy",
+          "Privacy And Policy",
         ].map((option, index) => (
           <TouchableOpacity
             key={index}
@@ -124,12 +127,12 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   logoutButton: {
-    padding: 15,
-    marginBottom: 25,
-    borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderColor: '#fff',
     borderWidth: 1,
-    borderColor: "#fff",
-    alignItems: "center",
+    paddingVertical: 20,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   logoutText: {
     color: "#fff",
