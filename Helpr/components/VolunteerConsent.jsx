@@ -15,7 +15,7 @@ export default function VolunteerConsent({ navigation }) {
         "Thank you!",
         "We appreciate your willingness to volunteer and help others!"
       );
-    } else {
+    } else {          
       Alert.alert("Notice", "You can always opt to volunteer later.");
     }
 

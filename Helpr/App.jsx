@@ -24,6 +24,7 @@ import VolunteerDetails from './components/VolunteerDetails';
 import ExistingUser from './components/ExistingUser';
 import VolunteerConsent from './components/VolunteerConsent';
 import suppressWarnings from './WarningConfig'; // Import the config
+import PhoneVerificationScreen from './components/PhoneVerificationScreen';
 
 // Initialize warning suppression
 suppressWarnings();
@@ -85,6 +86,7 @@ function App() {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="ExistingUser" component={ExistingUser} />
             <Stack.Screen name="NewUser" component={NewUserScreen} />
+            <Stack.Screen name="PhoneVerification" component={PhoneVerificationScreen} />
           </>
         )}
         {/* Shared screens */}

@@ -1,83 +1,102 @@
-import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../Backend/FirebaseInitialization'; // Adjust the path to your firebase.js
-import * as FileSystem from 'expo-file-system';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore"; 
+import { auth, sendOtp } from "../Backend/FirebaseInitialization"; // Updated import
+
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha"; // Import recaptcha
 
 export default function NewUserScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState(""); 
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-    // Function to handle user registration
-    const handleProceed = async () => {
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const recaptchaVerifier = useRef(null); // Reference for reCAPTCHA verification
+  const db = getFirestore();
 
-        // Read common passwords from a .txt file
-        const commonPasswords = await readCommonPasswords();
+  // Function to handle phone number verification and OTP sending
+  const handleProceed = async () => {
+    const phoneRegex = /^[+][0-9]{10,15}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
-            return;
-        }
+    if (!phoneRegex.test(phone)) {
+      Alert.alert("Invalid Phone Number", "Please enter a valid phone number, including country code.");
+      return;
+    }
 
-        if (!passwordRegex.test(password)) {
-            alert(
-                'Password must be at least 8 characters long and include:\n' +
-                '- At least one uppercase letter\n' +
-                '- At least one lowercase letter\n' +
-                '- At least one number\n' +
-                '- At least one special character (@, $, !, %, *, ?, &)'
-            );
-            return;
-        }
+    if (password !== confirmPassword) {
+      Alert.alert("Password Mismatch", "Passwords do not match!");
+      return;
+    }
 
-        if (commonPasswords.includes(password)) {
-            alert('This password is too common. Please choose a stronger, more unique password.');
-            return;
-        }
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        "Weak Password",
+        "Password must be at least 8 characters long and include:\n" +
+          "- At least one uppercase letter\n" +
+          "- At least one lowercase letter\n" +
+          "- At least one number\n" +
+          "- At least one special character (@, $, !, %, *, ?, &)."
+      );
+      return;
+    }
 
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            alert('Registration Successful');
-            console.log('User created:', userCredential.user);
-            navigation.navigate('VolunteerConsent'); // Navigate back to the login screen
-        } catch (error) {
-            console.error('Error during registration:', error);
-            alert(error.message);
-        }
-    };
+    // Send OTP
+    try {
+      setIsLoading(true);
+      const result = await sendOtp(auth, phone, recaptchaVerifier.current); // Send OTP using sendOtp function
+      setConfirmationResult(result); // Save confirmation result
+      Alert.alert("OTP sent!", "Please check your phone for the OTP.");
+    } catch (error) {
+      Alert.alert("Error", "Failed to send OTP: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Function to read common passwords from a .txt file
-    const readCommonPasswords = async () => {
-        try {
-            // Path to the text file in your app's asset directory
-            const fileUri = FileSystem.documentDirectory + '../assets/CommonPasswords.txt'; // Adjust the path as needed
-            
-            // Read the file content
-            const fileContents = await FileSystem.readAsStringAsync(fileUri);
-            
-            // Split the file content into an array of passwords
-            return fileContents.split('\n').map(password => password.trim());
-        } catch (error) {
-            console.error('Error reading common passwords file:', error);
-            return [];
-        }
-    };
+  // Function to verify OTP, create user, and store user details in Firestore
+  const verifyOtpAndCreateUser = async () => {
+    if (!otp) {
+      Alert.alert("OTP Error", "Please enter the OTP.");
+      return;
+    }
+
+    try {
+      // Verify OTP using the confirmation result
+      await confirmationResult.confirm(otp);
+      Alert.alert("OTP Verified", "Phone number verified successfully.");
+
+      // Now create the user with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      Alert.alert("Registration Successful", "User has been created.");
+
+      // Store additional user details in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        phone: phone,
+        createdAt: new Date(),
+      });
+
+      // Navigate to the VolunteerConsent page after successful registration
+      navigation.navigate("VolunteerConsent");
+    } catch (error) {
+      Alert.alert("Error", "Error during verification or user creation: " + error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <View>
-        <Text style={styles.header}>Hello there!</Text>
-        <Text style={styles.subHeader}>Welcome aboard!</Text>
-      </View>
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={auth.app.options} // Firebase config
+      />
+      <Text style={styles.header}>Hello there!</Text>
+      <Text style={styles.subHeader}>Welcome aboard!</Text>
 
       <View style={styles.subcontainer}>
         <Text style={styles.label}>Phone Number</Text>
@@ -116,18 +135,35 @@ export default function NewUserScreen({ navigation }) {
         />
       </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.proceedButton} onPress={handleProceed}>
-          <Text style={styles.buttonText}>Proceed</Text>
-        </TouchableOpacity>
+      {confirmationResult ? (
+        <View style={styles.subcontainer}>
+          <Text style={styles.label}>Enter OTP</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter the OTP sent to your phone"
+            placeholderTextColor="#888"
+            value={otp}
+            onChangeText={setOtp}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity style={styles.proceedButton} onPress={verifyOtpAndCreateUser}>
+            <Text style={styles.buttonText}>{isLoading ? "Verifying..." : "Verify OTP & Create User"}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.proceedButton} onPress={handleProceed} disabled={isLoading}>
+            <Text style={styles.buttonText}>{isLoading ? "Sending OTP..." : "Proceed"}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-        <TouchableOpacity
-          style={styles.existingUserButton}
-          onPress={() => navigation.navigate("ExistingUser")}
-        >
-          <Text style={styles.existingUserText}>I'm an existing user!</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.existingUserButton}
+        onPress={() => navigation.navigate("ExistingUser")}
+      >
+        <Text style={styles.existingUserText}>I'm an existing user!</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -142,8 +178,8 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   label: {
-    color: '#fff',
-    fontWeight: '500',
+    color: "#fff",
+    fontWeight: "500",
     fontSize: 16,
   },
   header: {
@@ -164,7 +200,7 @@ const styles = StyleSheet.create({
   },
   input: {
     color: "#fff",
-    borderBottomColor: "#fff", // White bottom border color
+    borderBottomColor: "#fff",
     borderBottomWidth: 1,
     paddingVertical: 10,
     fontSize: 16,
