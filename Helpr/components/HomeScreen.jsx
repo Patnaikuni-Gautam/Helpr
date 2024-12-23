@@ -11,8 +11,7 @@ import { mergeOverlappingZones } from '../Backend/ZoneMergeMangement'; // Import
 
 export default function HomeScreen() {
   const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [region, setRegion] = useState(null); // Region for the map
+  const [errorMsg, setErrorMsg] = useState(null)
   const [zones, setZones] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null); // Track selected location
   const [mapInitialized, setMapInitialized] = useState(false); // Track if the map region is set initially
