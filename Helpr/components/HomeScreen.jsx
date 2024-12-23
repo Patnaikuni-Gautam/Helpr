@@ -121,9 +121,9 @@ export default function HomeScreen() {
             <Text style={styles.location}>Current Location</Text>
           </View>
         </TouchableOpacity>
-        <View style={styles.profileContainer}>
+        <TouchableOpacity style={styles.profileContainer} onPress={() => navigation.navigate('Helper')}>
           <Image source={Volunteer} style={styles.volunteer} />
-        </View>
+        </TouchableOpacity>
       </View>
       <View style={styles.map}>
         <MapView

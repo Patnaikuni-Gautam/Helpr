@@ -59,7 +59,6 @@ export default function SettingsScreen() {
           "Personal Details",
           "Volunteer Details",
           "Emergency Contact Details",
-          "Parental Controls",
           "Privacy And Policy",
         ].map((option, index) => (
           <TouchableOpacity
