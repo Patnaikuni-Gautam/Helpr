@@ -8,13 +8,15 @@ import { useNavigation } from "@react-navigation/native";
 import call from 'react-native-phone-call';
 import { fetchZonesFromFirestore } from "../Backend/ZoneService"; // Import fetch function
 import { mergeOverlappingZones } from '../Backend/ZoneMergeMangement'; // Import the merging function
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
 export default function HomeScreen() {
   const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null);
   const [zones, setZones] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null); // Track selected location
   const [mapInitialized, setMapInitialized] = useState(false); // Track if the map region is set initially
+  const [userName, setUserName] = useState("Harshini"); // Default to "Harshini"
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -47,6 +49,12 @@ export default function HomeScreen() {
       // Fetch zones from Firestore
       const fetchedZones = await fetchZonesFromFirestore(); // Fetch zones dynamically from Firestore
       setZones(fetchedZones);
+
+      // Fetch userName from AsyncStorage and update the state
+      const storedUserName = await AsyncStorage.getItem("userName");
+      if (storedUserName) {
+        setUserName(storedUserName); // Update userName if fetched
+      }
     })();
   }, []);
 
@@ -110,17 +118,32 @@ export default function HomeScreen() {
   // Merge overlapping zones before displaying
   const mergedZones = mergeOverlappingZones(zones);
 
+  // Handle volunteer icon click
+  const handleVolunteerClick = async () => {
+    const consentStatus = await AsyncStorage.getItem("isVolunteer");
+
+    if (!consentStatus || JSON.parse(consentStatus) === false) {
+      // If no consent or consent is false, redirect to consent form
+      navigation.navigate("VolunteerConsent"); // Redirect to the consent form
+    } else {
+      // If consented, go to helper screen
+      navigation.navigate("Helper"); // Redirect to helper screen
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.nav}>
         <TouchableOpacity style={styles.profileContainer} onPress={navigateToSettings}>
           <Image source={Profile} style={styles.profile} />
           <View>
-            <Text style={styles.name}>Harshini</Text>
-            <Text style={styles.location}>Current Location</Text>
+            <Text style={styles.name}>{userName}</Text> {/* Use fetched userName */}
+            <Text style={styles.location}>
+              {location ? `Lat: ${location.coords.latitude.toFixed(4)}, Long: ${location.coords.longitude.toFixed(4)}` : "Current Location"}
+            </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.profileContainer} onPress={() => navigation.navigate('Helper')}>
+        <TouchableOpacity style={styles.profileContainer} onPress={handleVolunteerClick}>
           <Image source={Volunteer} style={styles.volunteer} />
         </TouchableOpacity>
       </View>

@@ -1,29 +1,27 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { CheckBox } from "react-native-elements";
-import { useDispatch } from "react-redux"; // Import the useDispatch hook
-import { setUserToken } from "../Backend/authSlice"; // Import your action from the authSlice
-import { auth } from "../Backend/FirebaseInitialization"; // Make sure this is correctly imported
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import { useNavigation } from "@react-navigation/native";
 
-export default function VolunteerConsent({ navigation }) {
+export default function VolunteerConsent() {
   const [isVolunteer, setIsVolunteer] = useState(false);
-  const dispatch = useDispatch(); // Initialize dispatch
+  const navigation = useNavigation(); // For navigation
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     if (isVolunteer) {
+      // Save consent status to AsyncStorage
+      await AsyncStorage.setItem("isVolunteer", JSON.stringify(true));
       Alert.alert(
         "Thank you!",
-        "We appreciate your willingness to volunteer and help others!"
+        "You have successfully agreed to volunteer and help others!"
       );
-    } else {          
+    } else {
       Alert.alert("Notice", "You can always opt to volunteer later.");
     }
 
-    // Set the user token after proceeding
-    if (auth.currentUser) {
-      dispatch(setUserToken(auth.currentUser.uid)); // Correct dispatch usage
-      navigation.navigate("Home");
-    }
+    // Navigate back to Settings Screen after consent
+    navigation.navigate("Settings"); // Change to wherever you want to go after consent
   };
 
   return (

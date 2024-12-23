@@ -32,6 +32,8 @@ import ReportZone from './components/ReportZone';
 import SelectZone from './components/SelectZone';
 import Helper from './components/Helper';
 import HelpAccepted from './components/HelpAccepted';
+import EditPersonalDetails from './components/EditPersonalDetails';
+import EditVolunteerDetails from './components/EditVolunteerDetails';
 
 
 function App() {
@@ -104,6 +106,8 @@ function App() {
         <Stack.Screen name="SelectZone" component={SelectZone} />
         <Stack.Screen name="Helper" component={Helper} />
         <Stack.Screen name="HelpAccepted" component={HelpAccepted} />
+        <Stack.Screen name="EditPersonalDetails" component={EditPersonalDetails} />
+        <Stack.Screen name="EditVolunteerDetails" component={EditVolunteerDetails} />
       </Stack.Navigator>
     </NavigationContainer>
   );

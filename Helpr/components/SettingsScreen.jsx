@@ -1,14 +1,44 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Profile from '../assets/me.jpg';
 import { StyleSheet, View, Text, Image, TouchableOpacity, StatusBar } from "react-native";
 import { useDispatch } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import { clearUserToken } from "../Backend/authSlice";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import { getAuth } from 'firebase/auth'; // Import Firebase Authentication
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const [isVolunteer, setIsVolunteer] = useState(false);
+  const [userEmail, setUserEmail] = useState(""); // State to hold the user's email
+  const [userName, setUserName] = useState(""); // State to hold the user's name
+  const [userPhone, setUserPhone] = useState(""); // State to hold the user's phone number
+
+  // Check if user has consented to volunteer and fetch email from Firebase
+  useEffect(() => {
+    const checkVolunteerStatus = async () => {
+      const volunteerStatus = await AsyncStorage.getItem("isVolunteer");
+      if (volunteerStatus) {
+        setIsVolunteer(JSON.parse(volunteerStatus)); // Update state based on AsyncStorage
+      }
+
+      // Fetch the user's email and other details from Firebase Authentication
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        setUserEmail(user.email); // Set the user's email
+      }
+
+      // Fetch additional user details from AsyncStorage
+      const storedUserName = await AsyncStorage.getItem("userName");
+      const storedUserPhone = await AsyncStorage.getItem("userPhone");
+
+      if (storedUserName) setUserName(storedUserName);
+      if (storedUserPhone) setUserPhone(storedUserPhone);
+    };
+    checkVolunteerStatus();
+  }, []);
 
   const navigateTo = (option) => {
     const formattedTitle = option.replace(/\s+/g, '');
@@ -26,7 +56,7 @@ export default function SettingsScreen() {
         AsyncStorage.removeItem("userToken"),
         dispatch(clearUserToken())
       ]);
-  
+
       // Reset navigation stack and navigate to the Login screen
       navigation.reset({
         index: 0, // Reset to the first screen
@@ -35,8 +65,7 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error("Error during logout:", error);
     }
-  };  
-  
+  };
 
   return (
     <View style={styles.container}>
@@ -44,23 +73,20 @@ export default function SettingsScreen() {
       <TouchableOpacity style={styles.profileContainer} onPress={navigateToPersonal}>
         <Image source={Profile} style={styles.profileImage} />
         <View>
-          <Text style={styles.name}>Harshini</Text>
-          <Text style={styles.email}>Email address</Text>
+          <Text style={styles.name}>{userName || "User Name"}</Text>
+          {/* Display the email here */}
+          <Text style={styles.email}>{userEmail || "Email not available"}</Text>
         </View>
       </TouchableOpacity>
 
-      {/* TODO */}
-      {/* "Payments And Subscription",
-      "Parental Controls", */}
-
       {/* Settings Options */}
       <View style={styles.optionsContainer}>
-        {[
-          "Personal Details",
-          "Volunteer Details",
-          "Emergency Contact Details",
-          "Privacy And Policy",
-        ].map((option, index) => (
+        {[ 
+          "Personal Details", 
+          isVolunteer ? "Volunteer Details" : "", // Conditionally show the Volunteer Details option
+          "Emergency Contact Details", 
+          "Privacy And Policy" 
+        ].map((option, index) => option ? (
           <TouchableOpacity
             key={index}
             style={styles.option}
@@ -68,7 +94,7 @@ export default function SettingsScreen() {
           >
             <Text style={styles.optionText}>{option}</Text>
           </TouchableOpacity>
-        ))}
+        ) : null)}
       </View>
 
       {/* Logout Button */}
