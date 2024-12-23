@@ -30,6 +30,8 @@ import PhoneVerificationScreen from './components/PhoneVerificationScreen';
 suppressWarnings();
 import ReportZone from './components/ReportZone';
 import SelectZone from './components/SelectZone';
+import Helper from './components/Helper';
+import HelpAccepted from './components/HelpAccepted';
 
 
 function App() {
@@ -100,6 +102,8 @@ function App() {
         <Stack.Screen name="VolunteerConsent" component={VolunteerConsent} />
         <Stack.Screen name="ReportZone" component={ReportZone} />
         <Stack.Screen name="SelectZone" component={SelectZone} />
+        <Stack.Screen name="Helper" component={Helper} />
+        <Stack.Screen name="HelpAccepted" component={HelpAccepted} />
       </Stack.Navigator>
     </NavigationContainer>
   );
