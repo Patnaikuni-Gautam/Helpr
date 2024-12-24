@@ -17,6 +17,7 @@ export default function HomeScreen() {
   const [selectedLocation, setSelectedLocation] = useState(null); // Track selected location
   const [mapInitialized, setMapInitialized] = useState(false); // Track if the map region is set initially
   const [userName, setUserName] = useState("Harshini"); // Default to "Harshini"
+  const [showCurrentLocationMarker, setShowCurrentLocationMarker] = useState(false); // Track marker visibility
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function HomeScreen() {
         setUserName(storedUserName); // Update userName if fetched
       }
     })();
-  }, []);
+  }, []); // Empty dependency array to run only once on component mount
 
   if (!location) {
     return (
@@ -131,6 +132,16 @@ export default function HomeScreen() {
     }
   };
 
+  const handlePressNearLocation = () => {
+    // Show the marker near the location
+    setShowCurrentLocationMarker(true);
+
+    // Hide the marker after 1 second
+    setTimeout(() => {
+      setShowCurrentLocationMarker(false);
+    }, 1000); // 1000 ms = 1 second
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.nav}>
@@ -159,21 +170,24 @@ export default function HomeScreen() {
           showsUserLocation={true}
           followsUserLocation={false} // Disable auto-follow to prevent reset
           rotateEnabled={true} // Allow rotation without resetting to North
+          onPress={handlePressNearLocation} // Trigger marker visibility on press near location
           onLongPress={handleLongPress}
-          onPress={handleUnselect}
         >
-          <Marker
-            coordinate={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            }}
-            title="You are here"
-          />
+          {/* Render "You are here" marker if visible */}
+          {showCurrentLocationMarker && (
+            <Marker
+              coordinate={{
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }}
+              title="You are here"
+            />
+          )}
 
-          {/* Render merged zones (both safe and danger zones) */}
+          {/* Render merged zones */}
           {mergedZones.map((zone, index) => (
             <Circle
-              key={index} // Use index as the key
+              key={index}
               center={{
                 latitude: zone.latitude,
                 longitude: zone.longitude,
